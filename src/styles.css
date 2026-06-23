@@ -1,0 +1,105 @@
+/* Pure semantic CSS — no Tailwind, no utility classes, no CSS-in-JS.
+   Style the primitives first; the cascade carries most of the work. */
+
+:root {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --text: #e6e8ec;
+  --muted: #9aa3af;
+  --accent: #6ea8fe;
+  --border: #262b34;
+  --radius: 8px;
+  --maxw: 44rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+header, footer {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+header { border-bottom: 1px solid var(--border); }
+footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+
+h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 2rem 0 0.5rem; }
+h2 a { color: inherit; }
+
+p { margin: 0 0 1rem; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul { padding-left: 1.2rem; }
+li { margin: 0.25rem 0; }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+/* Primitive form controls — styled once, used everywhere. */
+button {
+  font: inherit;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+
+input {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+}
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
+
+/* The few roles the document tree can't express on its own. */
+section.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.muted { color: var(--muted); }
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  margin-right: 0.4rem;
+}
