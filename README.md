@@ -20,6 +20,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 - `/` — a **static** (SSG) page; HTML at build time, with one small client island.
 - `/feed` — a **dynamic** (SSR) page that awaits a typed server function directly. No API route, no client island.
 - `/guestbook` — a **typed server action** (mutation). The function signature is the contract; no API route.
+- `/search` — a **client island** that fetches typed data by calling a server function directly. The job people give TanStack Query / SWR, with **no query library, no API route, no tRPC, no cache to sync**.
 - `/dashboard` — the **honest frontier**: where Better Auth would live, and why it isn't wired yet.
 
 The UI is colour-coded by execution boundary: **cyan** runs on the server, **amber** marks a `'use client'` island — the only JavaScript that ships. Pure semantic CSS, no Tailwind.
@@ -31,6 +32,14 @@ pnpm install
 pnpm dev      # http://localhost:3000
 pnpm build && pnpm start
 ```
+
+## Install it as an app
+
+A manifest + a ~30-line service worker make it an installable PWA: on a phone,
+**Add to Home Screen** launches it standalone — its own icon, no browser chrome.
+Because the stack is server-rendered and light, the experience is hard to tell
+from native. Verified installable (service worker active, manifest valid, zero
+Chrome installability errors). No Workbox, no PWA plugin.
 
 ## Honest frontier: auth
 

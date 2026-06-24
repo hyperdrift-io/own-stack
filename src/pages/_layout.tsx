@@ -13,6 +13,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <>
       <meta name="description" content={data.description} />
       <link rel="icon" type="image/png" href={data.icon} />
+      {/* Installable web app: manifest + theme + iOS add-to-home-screen hints. */}
+      <link rel="manifest" href="/manifest.webmanifest" />
+      <meta name="theme-color" content="#091017" />
+      <link rel="apple-touch-icon" href="/images/icon-192.png" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-title" content="own-stack" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       {/* Type via <link>, not a package — the "5 dependencies" count stays honest. */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

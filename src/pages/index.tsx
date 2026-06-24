@@ -1,5 +1,6 @@
 import { Link } from 'waku';
 import { Counter } from '../components/counter';
+import { InstallApp } from '../components/install-app';
 
 // A server component, statically generated (render: 'static' below) — this whole
 // page is HTML at build time. The only JavaScript that ships is the <Counter> island.
@@ -67,6 +68,11 @@ export default async function HomePage() {
           <span className="desc">A typed server-action mutation. One small client island.</span>
           <span className="runtime">SSR · 1 island</span>
         </Link>
+        <Link to="/search" className="route-card" data-runtime="client">
+          <span className="path">/search</span>
+          <span className="desc">A client island fetching typed data via a server function — no tRPC, no TanStack.</span>
+          <span className="runtime">client fetch</span>
+        </Link>
         <Link to="/dashboard" className="route-card" data-runtime="frontier">
           <span className="path">/dashboard</span>
           <span className="desc">Where Better Auth wants to live — the honest frontier.</span>
@@ -75,6 +81,13 @@ export default async function HomePage() {
       </div>
 
       <Counter />
+
+      <h2>Make it an app</h2>
+      <p className="muted">
+        Server-rendered and fast, it installs to a phone&apos;s home screen and runs
+        standalone — the same code, indistinguishable from native.
+      </p>
+      <InstallApp />
     </div>
   );
 }
