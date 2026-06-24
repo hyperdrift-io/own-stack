@@ -17,9 +17,12 @@ This is a minimal, runnable reference: every claim below is something this repo 
 
 ## What it demonstrates
 
-- `/` — a **static** (SSG) page; HTML at build time, one small client island.
-- `/feed` — a **dynamic** (SSR) page that awaits a typed server function directly. Ships **zero client-side JavaScript**.
+- `/` — a **static** (SSG) page; HTML at build time, with one small client island.
+- `/feed` — a **dynamic** (SSR) page that awaits a typed server function directly. No API route, no client island.
 - `/guestbook` — a **typed server action** (mutation). The function signature is the contract; no API route.
+- `/dashboard` — the **honest frontier**: where Better Auth would live, and why it isn't wired yet.
+
+The UI is colour-coded by execution boundary: **cyan** runs on the server, **amber** marks a `'use client'` island — the only JavaScript that ships. Pure semantic CSS, no Tailwind.
 
 ## Run it
 

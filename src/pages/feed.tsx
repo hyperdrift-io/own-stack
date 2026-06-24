@@ -3,29 +3,38 @@ import { getFeed } from '../lib/data';
 
 // A server component rendered per request (render: 'dynamic' = SSR). It awaits a
 // typed server function directly — `items` is FeedItem[] with zero glue between
-// the data layer and the view. No client JS ships for this page at all.
+// the data layer and the view. No client island ships for this page at all.
 export default async function FeedPage() {
   const items = await getFeed();
 
   return (
     <div>
       <title>Feed — own-stack</title>
+
+      <span className="stamp">render: dynamic · ssr</span>
+
       <h1>Feed</h1>
-      <p className="muted">
-        Server-rendered on every request. The data came from a typed server
-        function the component <code>await</code>ed — no API route, no tRPC.
+      <p className="lede">
+        Server-rendered on every request. The data came straight from a typed
+        server function the component <code>await</code>ed.
       </p>
 
-      <section className="panel">
+      <div className="log">
         {items.map((item) => (
-          <p key={item.id}>
-            <span className="tag">{item.at}</span>
-            {item.title} <span className="muted">· {item.source}</span>
-          </p>
+          <div className="row" key={item.id}>
+            <time>{item.at}</time>
+            <div>
+              {item.title} <span className="src">· {item.source}</span>
+            </div>
+          </div>
         ))}
-      </section>
+      </div>
 
-      <p><Link to="/">← home</Link></p>
+      <p className="note">
+        no API route · no tRPC · no codegen — and zero client islands on this page
+      </p>
+
+      <Link to="/" className="back">home</Link>
     </div>
   );
 }

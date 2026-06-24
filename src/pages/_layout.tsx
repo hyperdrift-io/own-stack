@@ -13,6 +13,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <>
       <meta name="description" content={data.description} />
       <link rel="icon" type="image/png" href={data.icon} />
+      {/* Type via <link>, not a package — the "5 dependencies" count stays honest. */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Space+Mono:wght@400;700&display=swap"
+      />
       <Header />
       <main>{children}</main>
       <Footer />

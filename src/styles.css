@@ -1,105 +1,579 @@
-/* Pure semantic CSS — no Tailwind, no utility classes, no CSS-in-JS.
-   Style the primitives first; the cascade carries most of the work. */
+/* ============================================================================
+   own-stack — "Cyanotype Blueprint"
+   Pure semantic CSS. No Tailwind, no utility classes, no CSS-in-JS.
+   Style the primitives first; the cascade carries most of the work.
+
+   The signature idea: the UI is colour-coded by execution boundary.
+     cyan  = runs on the server (the calm majority)
+     amber = a client island — the only JavaScript that ships
+   ========================================================================== */
 
 :root {
-  --bg: #0f1115;
-  --surface: #171a21;
-  --text: #e6e8ec;
-  --muted: #9aa3af;
-  --accent: #6ea8fe;
-  --border: #262b34;
-  --radius: 8px;
-  --maxw: 44rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.6;
+  /* Ink — deep cyanotype blueprint */
+  --ink:      #091017;
+  --ink-2:    #0d1925;
+  --ink-3:    #102230;
+  --text:     #d7e4f0;
+  --muted:    #74879c;
+  --line:     #1b2c3e;
+
+  /* Server = cyan (dominant). Client = amber (rare, marks the islands). */
+  --server:       #45cfe2;
+  --server-dim:   rgba(69, 207, 226, 0.14);
+  --server-glow:  rgba(69, 207, 226, 0.35);
+  --client:       #ffb454;
+  --client-dim:   rgba(255, 180, 84, 0.13);
+  --client-glow:  rgba(255, 180, 84, 0.4);
+
+  --grid:     rgba(69, 207, 226, 0.045);
+  --radius:   3px;
+  --maxw:     54rem;
+
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --mono:  "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * { box-sizing: border-box; }
 
+::selection { background: var(--server-glow); color: var(--ink); }
+
 html, body { margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
+  font-family: var(--serif);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-size: 1.02rem;
+  line-height: 1.62;
   color: var(--text);
+  background-color: var(--ink);
+  /* Drafting grid + a soft cyanotype light from upper-left. */
+  background-image:
+    radial-gradient(120% 80% at 12% -10%, rgba(69, 207, 226, 0.08), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px, 30px 30px;
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
-main {
+/* Fine grain overlay — adds blueprint-paper texture without an asset. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------------ shell */
+
+header, main, footer {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+  position: relative;
+  z-index: 2;
 }
 
-header, footer {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 1.25rem;
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.4rem 1.5rem;
+  border-bottom: 1px solid var(--line);
 }
 
-header { border-bottom: 1px solid var(--border); }
-footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+main { padding: 3rem 1.5rem 4rem; }
 
-h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
-h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 2rem 0 0.5rem; }
+footer {
+  padding: 1.6rem 1.5rem 3rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ typography */
+
+h1 {
+  font-weight: 900;
+  font-size: clamp(2.9rem, 9vw, 4.6rem);
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-weight: 600;
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
+  margin: 3.2rem 0 1rem;
+}
 h2 a { color: inherit; }
 
-p { margin: 0 0 1rem; }
-
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-ul { padding-left: 1.2rem; }
-li { margin: 0.25rem 0; }
-
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.1em 0.35em;
-  font-size: 0.9em;
+h3 {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--server);
+  margin: 0 0 1.1rem;
 }
 
-/* Primitive form controls — styled once, used everywhere. */
-button {
-  font: inherit;
-  color: var(--bg);
-  background: var(--accent);
-  border: none;
-  border-radius: 6px;
-  padding: 0.45rem 0.9rem;
-  cursor: pointer;
-}
-button:hover { filter: brightness(1.08); }
+p { margin: 0 0 1.1rem; }
 
-input {
-  font: inherit;
+.lede {
+  font-size: clamp(1.1rem, 2.6vw, 1.35rem);
+  line-height: 1.5;
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.45rem 0.6rem;
+  max-width: 34rem;
+  margin-bottom: 2rem;
 }
-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; }
-
-/* The few roles the document tree can't express on its own. */
-section.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  margin: 1.5rem 0;
-}
+strong { font-weight: 600; color: #eaf3fb; }
 
 .muted { color: var(--muted); }
-.tag {
-  display: inline-block;
-  font-size: 0.75rem;
+
+a {
+  color: var(--server);
+  text-decoration: none;
+  border-bottom: 1px solid var(--server-dim);
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+a:hover { border-bottom-color: var(--server); }
+
+ul { list-style: none; padding: 0; margin: 0; }
+
+code, .mono {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+code {
+  color: var(--server);
+  background: var(--server-dim);
+  border-radius: var(--radius);
+  padding: 0.08em 0.4em;
+}
+
+/* ------------------------------------------------------------ primitives */
+
+button {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--server);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.62rem 1.1rem;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.2s ease;
+}
+button:hover { filter: brightness(1.12); box-shadow: 0 0 0 1px var(--server), 0 6px 22px -10px var(--server-glow); }
+button:active { transform: translateY(1px); }
+
+input {
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  color: var(--text);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.7rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input::placeholder { color: var(--muted); }
+input:focus {
+  outline: none;
+  border-color: var(--client);
+  box-shadow: 0 0 0 3px var(--client-dim);
+}
+
+form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 1.4rem 0; }
+
+:focus-visible { outline: 2px solid var(--server); outline-offset: 3px; border-radius: 2px; }
+
+/* ------------------------------------------------------- header / legend */
+
+.wordmark {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.wordmark::before {
+  /* registration / target mark */
+  content: "";
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--server);
+  box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 1px var(--server-dim);
+}
+.wordmark:hover { color: var(--server); }
+
+.legend {
+  display: flex;
+  gap: 1.1rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--muted);
-  border: 1px solid var(--border);
+}
+.legend > span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend > span::before {
+  content: "";
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.legend .is-server::before { background: var(--server); box-shadow: 0 0 8px var(--server-glow); }
+.legend .is-client::before { background: var(--client); box-shadow: 0 0 8px var(--client-glow); }
+
+/* --------------------------------------------------------------- stamps */
+
+/* Render-mode stamp — an engineering spec label for each page. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--server);
+  border: 1px solid var(--server-dim);
   border-radius: 999px;
-  padding: 0.1rem 0.6rem;
-  margin-right: 0.4rem;
+  padding: 0.28rem 0.75rem;
+  margin-bottom: 1.6rem;
+}
+.stamp::before { content: "▸"; color: var(--server); }
+
+/* --------------------------------------------------------------- hero */
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.4rem;
+  margin: 2.4rem 0 0.5rem;
+  padding-top: 1.8rem;
+  border-top: 1px solid var(--line);
+}
+.figure { display: flex; flex-direction: column; gap: 0.2rem; }
+.figure b {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--server);
+}
+.figure span {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ----------------------------------------------------- the CSS schematic */
+
+.schematic {
+  margin: 1.4rem 0 0.5rem;
+  padding: 1.6rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, var(--ink-2), var(--ink));
+  overflow-x: auto;
+}
+.pipeline {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: max-content;
+}
+.node {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--server-dim);
+  border-radius: var(--radius);
+  background: var(--server-dim);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.node b { font-size: 0.72rem; font-weight: 700; color: var(--text); letter-spacing: 0.01em; }
+.node span { font-size: 0.56rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--server); }
+.node.terminus { background: transparent; border-style: dashed; }
+
+/* connector arrows between nodes */
+.pipeline .node + .node { position: relative; margin-left: 1.5rem; }
+.pipeline .node + .node::before {
+  content: "";
+  position: absolute;
+  left: -1.5rem; top: 50%;
+  width: 1.5rem; height: 1px;
+  background: linear-gradient(90deg, var(--server-dim), var(--server));
+}
+.pipeline .node + .node::after {
+  content: "";
+  position: absolute;
+  left: -0.45rem; top: 50%;
+  width: 5px; height: 5px;
+  border-top: 1px solid var(--server);
+  border-right: 1px solid var(--server);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* the lone client-island branch — amber, dropped below */
+.branch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+  padding-left: 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--client);
+}
+.branch::before {
+  content: "└─";
+  color: var(--client);
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------- pieces list */
+
+.pieces { display: grid; gap: 0; margin: 1rem 0 0; }
+.pieces li {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 1.2rem;
+  padding: 0.95rem 0;
+  border-top: 1px solid var(--line);
+  align-items: baseline;
+}
+.pieces li:last-child { border-bottom: 1px solid var(--line); }
+.pieces li b {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--server);
+}
+.pieces li p { margin: 0; color: var(--muted); font-size: 0.96rem; }
+
+/* --------------------------------------------------------- route cards */
+
+.routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.9rem;
+  margin: 1.2rem 0;
+}
+.route-card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  background: var(--ink-2);
+  color: var(--text);
+  border-left: 2px solid var(--server);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.route-card:hover { transform: translateY(-3px); background: var(--ink-3); border-left-color: var(--server); }
+.route-card[data-runtime="client"] { border-left-color: var(--client); }
+.route-card .path {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+.route-card .desc { font-size: 0.88rem; color: var(--muted); }
+.route-card .runtime {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--server);
+}
+.route-card[data-runtime="client"] .runtime { color: var(--client); }
+.route-card[data-runtime="frontier"] { border-left-color: var(--muted); border-left-style: dashed; }
+.route-card[data-runtime="frontier"] .runtime { color: var(--muted); }
+
+/* ----------------------------------------------------- panels & islands */
+
+/* A server-rendered surface — calm cyan keyline. */
+.panel {
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem 1.3rem;
+  margin: 1.4rem 0;
+}
+
+/* A client island — amber, tagged. The only JS on the page. */
+.island {
+  position: relative;
+  background:
+    repeating-linear-gradient(-45deg, var(--client-dim) 0 1px, transparent 1px 9px),
+    var(--ink-2);
+  border: 1px solid var(--client-dim);
+  border-left: 2px solid var(--client);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.3rem 1.3rem;
+  margin: 1.6rem 0;
+}
+.island::before {
+  /* Renders the directive label. The space is CSS-escaped so the raw source
+     never holds the exact substring Waku's allow-server plugin scans for to
+     decide whether to parse a file as TSX — which would choke on this CSS. */
+  content: "'use\20 client'";
+  position: absolute;
+  top: -0.7rem; left: 1rem;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--client);
+  background: var(--ink);
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--client-dim);
+  border-radius: 999px;
+}
+.island button { background: var(--client); }
+.island button:hover { box-shadow: 0 0 0 1px var(--client), 0 6px 22px -10px var(--client-glow); }
+.island p:first-of-type { margin-top: 0; }
+.island .count {
+  font-family: var(--serif);
+  font-weight: 900;
+  color: var(--client);
+  font-size: 1.4em;
+}
+
+/* ------------------------------------------------------------- data log */
+
+.log { margin: 1.4rem 0; }
+.log .row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+.log .row:last-child { border-bottom: 1px solid var(--line); }
+.log time {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--server);
+  letter-spacing: 0.02em;
+}
+.log .src { color: var(--muted); font-size: 0.84rem; }
+
+/* guestbook entries */
+.entries { margin: 1.6rem 0; display: grid; gap: 0.8rem; }
+.entry {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--server);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  background: var(--ink-2);
+}
+.entry .who { font-family: var(--mono); font-size: 0.78rem; color: var(--text); }
+.entry .who time { color: var(--muted); margin-left: 0.5rem; }
+.entry .msg { margin: 0.35rem 0 0; color: var(--text); }
+
+/* --------------------------------------------------------- annotations */
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 1.4rem 0;
+  padding-left: 0.2rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.note::before {
+  content: "//";
+  color: var(--server);
+  flex: none;
+}
+.note.client::before { content: "//"; color: var(--client); }
+
+/* honest frontier (dashboard) */
+.frontier {
+  border: 1px dashed var(--client-dim);
+  border-left: 2px solid var(--client);
+  border-radius: var(--radius);
+  background: var(--client-dim);
+  padding: 1.4rem 1.4rem;
+  margin: 1.6rem 0;
+}
+.frontier h3 { color: var(--client); }
+.frontier code { color: var(--client); background: rgba(255, 180, 84, 0.16); }
+
+.back {
+  display: inline-block;
+  margin-top: 2.4rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  border: none;
+}
+.back::before { content: "← "; }
+
+/* ----------------------------------------------------------- motion */
+
+@media (prefers-reduced-motion: no-preference) {
+  main > div > * { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+  main > div > *:nth-child(1) { animation-delay: 0.04s; }
+  main > div > *:nth-child(2) { animation-delay: 0.10s; }
+  main > div > *:nth-child(3) { animation-delay: 0.16s; }
+  main > div > *:nth-child(4) { animation-delay: 0.22s; }
+  main > div > *:nth-child(5) { animation-delay: 0.28s; }
+  main > div > *:nth-child(6) { animation-delay: 0.34s; }
+  main > div > *:nth-child(7) { animation-delay: 0.40s; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ----------------------------------------------------------- responsive */
+
+@media (max-width: 33rem) {
+  main { padding: 2rem 1.1rem 3rem; }
+  .pieces li { grid-template-columns: 1fr; gap: 0.3rem; }
+  .log .row { grid-template-columns: 1fr; gap: 0.2rem; }
+  .figures { gap: 1.6rem; }
+  .figure b { font-size: 2rem; }
 }
