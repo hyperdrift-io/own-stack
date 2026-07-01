@@ -1,6 +1,8 @@
 # own-stack
 
-A server-rendered React stack you **own** — no Next.js. Assembled from small pieces you control instead of one framework that owns you.
+A server-rendered React stack you **own** — no Next.js. Assembled from small pieces you control, each one earning its place.
+
+**🔗 Live demo: [own-stack.hyperdrift.io](https://own-stack.hyperdrift.io)** — try the feed, the typed search, and the guestbook, then add it to your phone's home screen and see how native it feels.
 
 This is a minimal, runnable reference: every claim below is something this repo actually does.
 
@@ -9,7 +11,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 | Concern | Choice | Why |
 |---|---|---|
 | Rendering | **[Waku](https://waku.gg)** (React Server Components) | SSG · SSR · file-based routing, minimal surface. "Next without Next." |
-| Data + mutations | **RSC + server functions** | Server Components `await` typed functions directly; server actions handle mutations. End-to-end types with **no tRPC, no API schema, no codegen**. |
+| Data + mutations | **RSC + server functions** | Server Components `await` typed functions directly; server actions handle mutations. End-to-end types straight through the import — the function signature is the contract, database to button. |
 | Styling | **Pure semantic CSS** | One stylesheet, style the primitives. No Tailwind, no CSS-in-JS. |
 | Auth | **[Better Auth](https://better-auth.com)** *(designated layer)* | Framework-agnostic, lives in your app. See *Honest frontier* below. |
 
@@ -20,7 +22,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 - `/` — a **static** (SSG) page; HTML at build time, with one small client island.
 - `/feed` — a **dynamic** (SSR) page that awaits a typed server function directly. No API route, no client island.
 - `/guestbook` — a **typed server action** (mutation). The function signature is the contract; no API route.
-- `/search` — a **client island** that fetches typed data by calling a server function directly. The job people give TanStack Query / SWR, with **no query library, no API route, no tRPC, no cache to sync**.
+- `/search` — a **client island** that fetches typed data by calling a server function directly. The job people give TanStack Query / SWR — done with a plain import: types flow across the wire, and the server stays the single source of truth.
 - `/dashboard` — the **honest frontier**: where Better Auth would live, and why it isn't wired yet.
 
 The UI is colour-coded by execution boundary: **cyan** runs on the server, **amber** marks a `'use client'` island — the only JavaScript that ships. Pure semantic CSS, no Tailwind.
@@ -47,4 +49,4 @@ Better Auth is framework-agnostic and clean. The friction today is **Waku-beta's
 
 ---
 
-Built by [Hyperdrift](https://hyperdrift.io). Doctrine: own your stack, prefer subtraction, no lock-in.
+Built by [Hyperdrift](https://hyperdrift.io). Doctrine: own your stack, keep only what earns its place, stay free to change it.
