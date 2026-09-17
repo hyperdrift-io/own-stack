@@ -45,7 +45,7 @@ Chrome installability errors). No Workbox, no PWA plugin.
 
 ## Honest frontier: auth
 
-Better Auth is framework-agnostic and clean. When this demo shipped, mounting an arbitrary request handler in Waku-beta needed the programmatic `createApi` — no file convention, so we left `/dashboard` honest instead of faking a protected page. That gap was smaller than we said: Waku's file router serves raw `Request → Response` handlers from `src/pages/_api/**` (the folder is `_api`, not `api` — we probed the wrong one), a `[...route].ts` exporting `GET`/`POST` answers `/api/auth/*`, and Better Auth documents exactly that Waku integration. What remains is wiring it here and proving the session flow inside server components. Until it lands, `/dashboard` still says so.
+Auth is the one layer this demo has not wired, and we would rather say so than fake a protected page. Two corrections to what we first wrote. The mount was never the blocker: Waku's file router serves raw `Request → Response` handlers from `src/pages/_api/**` (the folder is `_api`, not `api` — we probed the wrong one), so a `[...route].ts` exporting `GET`/`POST` answers `/api/auth/*`. And the right library is the one we already own: passkeys through [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) (WebAuthn, HttpOnly session cookie), not a vendored auth layer. Its server half still speaks `next/server`; porting that core to plain `Request`/`Response` is the open task, and `/dashboard` stays honest until it lands.
 
 ---
 
