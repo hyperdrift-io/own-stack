@@ -13,7 +13,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 | Rendering | **[Waku](https://waku.gg)** (React Server Components) | SSG · SSR · file-based routing, minimal surface. "Next without Next." |
 | Data + mutations | **RSC + server functions** | Server Components `await` typed functions directly; server actions handle mutations. End-to-end types straight through the import — the function signature is the contract, database to button. |
 | Styling | **Pure semantic CSS** | One stylesheet, style the primitives. No Tailwind, no CSS-in-JS. |
-| Auth | **[Better Auth](https://better-auth.com)** *(designated layer)* | Framework-agnostic, lives in your app. See *Honest frontier* below. |
+| Auth | **Owned passkeys** — [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) *(designated layer)* | WebAuthn + an HttpOnly session cookie, in a package we own. See *Honest frontier* below. |
 
 **Whole stack: 5 production dependencies.** The complete demo app is ~400 lines across 15 files.
 
@@ -23,7 +23,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 - `/feed` — a **dynamic** (SSR) page that awaits a typed server function directly. No API route, no client island.
 - `/guestbook` — a **typed server action** (mutation). The function signature is the contract; no API route.
 - `/search` — a **client island** that fetches typed data by calling a server function directly. The job people give TanStack Query / SWR — done with a plain import: types flow across the wire, and the server stays the single source of truth.
-- `/dashboard` — the **honest frontier**: where Better Auth would live, and why it isn't wired yet.
+- `/dashboard` — the **honest frontier**: where owned passkey auth goes, and why it isn't wired yet.
 
 The UI is colour-coded by execution boundary: **cyan** runs on the server, **amber** marks a `'use client'` island — the only JavaScript that ships. Pure semantic CSS, no Tailwind.
 
