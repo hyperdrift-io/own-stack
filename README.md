@@ -30,9 +30,9 @@ The UI is colour-coded by execution boundary: **cyan** runs on the server, **amb
 ## Run it
 
 ```bash
-pnpm install
-pnpm dev      # http://localhost:3000
-pnpm build && pnpm start
+npm install
+npm run dev    # http://localhost:3000
+npm run build && npm start
 ```
 
 ## Install it as an app

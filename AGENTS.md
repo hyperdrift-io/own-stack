@@ -25,13 +25,14 @@ The UI colour-codes execution boundaries: cyan runs on the server, amber marks a
 ## Commands
 
 ```bash
-pnpm dev                  # http://localhost:3000
-pnpm build && pnpm start  # production build, served on PORT/HOST
-pnpm typegen              # waku router typegen
+npm run dev                    # http://localhost:3000
+npm run build && npm start     # production build, served on PORT/HOST
+npm run type-check             # tsc --noEmit
+npm run typegen                # waku router typegen
 ```
 
-pnpm here is npm migration debt (root `AGENTS.md` → Package Manager Standard): migrate the full package-manager contract before dependency-changing work — `pnpm-lock.yaml` and the `pnpm` `build_cmd`/`script` in `infra/group_vars/apps.yml` included (the deploy role still defaults to pnpm, so this app deploys only while the server keeps pnpm; set `package_manager: "npm"` when migrating).
+npm is the package manager (root `AGENTS.md` → Package Manager Standard): `package-lock.json` is the lockfile, and `infra/group_vars/apps.yml` deploys this app with `package_manager: "npm"`.
 
 ## Version pin
 
-`waku` is pinned to `1.0.0-beta.4`; `1.0.0-rc.0` (2026-08-25) froze the public API. This app is the fleet's reference, so bump it here first, then every Waku app (`greenlife`, `stillness`, `together`, `wakejam`, `unanswered`). React stays on the 19.2 line until Waku's peer range moves. Verdicts: `meta/TOOLING.md`.
+`waku` is pinned to `1.0.0-rc.0` (2026-08-25), the release that froze the public API; bumped from `1.0.0-beta.4` on 2026-09-17 with no code changes. This app is the fleet's reference, so bump it here first, then every Waku app (`greenlife`, `stillness`, `together`, `wakejam`, `unanswered`). Move to `1.0.0` final when it ships. React stays on the 19.2 line: Waku's peer range is `~19.2.4`, so hold React 19.3 until that range moves. Verdicts: `meta/TOOLING.md`.
