@@ -45,7 +45,7 @@ Chrome installability errors). No Workbox, no PWA plugin.
 
 ## Honest frontier: auth
 
-Better Auth is framework-agnostic and clean. The friction today is **Waku-beta's API ergonomics**: mounting an arbitrary request handler doesn't work via a file convention — it needs Waku's programmatic `createApi`. So in this young framework, the API/auth layer is where you still wire the plumbing yourself, unlike Next where auth is a documented drop-in. That gap is the price of owning the stack while the RSC ecosystem is still young — and it's closing fast.
+Better Auth is framework-agnostic and clean. When this demo shipped, mounting an arbitrary request handler in Waku-beta needed the programmatic `createApi` — no file convention, so we left `/dashboard` honest instead of faking a protected page. That gap was smaller than we said: Waku's file router serves raw `Request → Response` handlers from `src/pages/_api/**` (the folder is `_api`, not `api` — we probed the wrong one), a `[...route].ts` exporting `GET`/`POST` answers `/api/auth/*`, and Better Auth documents exactly that Waku integration. What remains is wiring it here and proving the session flow inside server components. Until it lands, `/dashboard` still says so.
 
 ---
 
