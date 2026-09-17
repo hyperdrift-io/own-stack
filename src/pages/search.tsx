@@ -1,9 +1,11 @@
 import { Link } from 'waku';
 import { getFeed } from '../lib/data';
+import { AgentTools } from '../components/agent-tools';
 import { FeedSearch } from '../components/feed-search';
 
 // SSR page that renders an initial server-fetched list, then hands off to a
 // client island that fetches more by calling a typed server function directly.
+// <AgentTools> renders nothing: it offers the same search to the visitor's agent.
 export default async function SearchPage() {
   const initial = await getFeed();
 
@@ -21,9 +23,11 @@ export default async function SearchPage() {
       </p>
 
       <FeedSearch initial={initial} />
+      <AgentTools />
 
       <p className="note client">
-        client-initiated fetch · server-owned data · types shared by import
+        client-initiated fetch · server-owned data · types shared by import ·
+        the same search, offered to your agent as <code>search_feed</code>
       </p>
 
       <Link to="/" className="back">home</Link>

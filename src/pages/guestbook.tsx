@@ -23,7 +23,8 @@ export default async function GuestbookPage() {
 
       <p className="note client">
         the form above is the only JavaScript on this page — everything below is
-        server-rendered
+        server-rendered. It is also a WebMCP tool, <code>sign_guestbook</code>:
+        your agent can fill it in, and you still press Sign
       </p>
 
       <div className="entries">
