@@ -439,7 +439,8 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
 }
 
 /* A client island — amber, tagged. The only JS on the page. */
-.island {
+.island,
+aside[data-runtime='client'] {
   position: relative;
   background:
     repeating-linear-gradient(-45deg, var(--client-dim) 0 1px, transparent 1px 9px),
@@ -450,7 +451,8 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
   padding: 1.5rem 1.3rem 1.3rem;
   margin: 1.6rem 0;
 }
-.island::before {
+.island::before,
+aside[data-runtime='client']::before {
   /* Renders the directive label. The space is CSS-escaped so the raw source
      never holds the exact substring Waku's allow-server plugin scans for to
      decide whether to parse a file as TSX — which would choke on this CSS. */
@@ -469,6 +471,7 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
 .island button { background: var(--client); }
 .island button:hover { box-shadow: 0 0 0 1px var(--client), 0 6px 22px -10px var(--client-glow); }
 .island p:first-of-type { margin-top: 0; }
+aside[data-runtime='client'] > :last-child { margin-bottom: 0; }
 .island .count {
   font-family: var(--serif);
   font-weight: 900;
@@ -528,6 +531,7 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
   flex: none;
 }
 .note.client::before { content: "//"; color: var(--client); }
+.note.client code { color: var(--client); background: var(--client-dim); }
 
 /* honest frontier (dashboard) */
 .frontier {
@@ -550,6 +554,80 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
 }
 .back::before { content: "← "; }
 
+/* ------------------------------------------- the outer layers (/layers) */
+
+/* No classes from here down: where code runs is an attribute the markup
+   already carries, and everything else is a primitive in its context. */
+
+pre {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  line-height: 1.75;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+}
+pre code { font-size: inherit; color: var(--text); background: none; padding: 0; }
+
+article[data-runtime] {
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--server);
+  border-radius: var(--radius);
+  padding: 1.4rem 1.3rem 0.3rem;
+  margin: 1.4rem 0;
+}
+article[data-runtime='client'] { border-left-color: var(--client); }
+article[data-runtime='client'] :is(h3, a, p > code) { color: var(--client); }
+article[data-runtime='client'] p > code { background: var(--client-dim); }
+article[data-runtime='client'] a { border-bottom-color: var(--client-dim); }
+article[data-runtime='client'] a:hover { border-bottom-color: var(--client); }
+
+dl { margin: 1.2rem 0 2.4rem; border-bottom: 1px solid var(--line); }
+dt { padding-top: 1rem; border-top: 1px solid var(--line); }
+dd { margin: 0.45rem 0 1rem; color: var(--muted); font-size: 0.96rem; max-width: 40rem; }
+
+/* The live wire: the word carries the state, the lamp repeats it. */
+output[data-open] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+output[data-open]::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--client);
+}
+output[data-open='true'] { color: var(--client); }
+output[data-open='true']::before { background: var(--client); box-shadow: 0 0 8px var(--client-glow); }
+
+aside[data-runtime='client'] :is(h3, a, time, b) { color: var(--client); }
+aside[data-runtime='client'] a { border-bottom-color: var(--client-dim); }
+aside[data-runtime='client'] ol { list-style: none; padding: 0; margin: 0; }
+aside[data-runtime='client'] li { padding: 0.7rem 0; border-top: 1px solid var(--client-dim); }
+aside[data-runtime='client'] li b { font-family: var(--mono); font-size: 0.78rem; margin-right: 0.5rem; }
+
+/* A <Suspense> fallback, streamed first and replaced when the server catches up. */
+[role='status'] {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--server);
+  padding: 0.85rem 0;
+  border-block: 1px solid var(--line);
+}
+
+/* WebMCP: the browser sets this while an agent is filling a declarative tool form. */
+form:tool-form-active { outline: 1px dashed var(--client); outline-offset: 6px; }
+
 /* ----------------------------------------------------------- motion */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -561,6 +639,10 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
   main > div > *:nth-child(5) { animation-delay: 0.28s; }
   main > div > *:nth-child(6) { animation-delay: 0.34s; }
   main > div > *:nth-child(7) { animation-delay: 0.40s; }
+
+  [role='status'] { animation: wait 0.9s ease-in-out infinite alternate; }
+
+  @keyframes wait { to { opacity: 0.45; } }
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(14px); }

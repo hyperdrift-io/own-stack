@@ -19,7 +19,7 @@ export default async function HomePage() {
 
       <div className="figures">
         <div className="figure"><b>5</b><span>production deps</span></div>
-        <div className="figure"><b>~400</b><span>lines of code</span></div>
+        <div className="figure"><b>~800</b><span>lines of code</span></div>
         <div className="figure"><b>0</b><span>API routes · tRPC · codegen</span></div>
         <div className="figure"><b>1</b><span>framework, and it gets out of the way</span></div>
       </div>
@@ -27,7 +27,8 @@ export default async function HomePage() {
       <h2>How a request flows</h2>
       <div className="schematic">
         <div className="pipeline">
-          <div className="node"><b>Request</b><span>browser</span></div>
+          <div className="node"><b>Request</b><span>browser · or its agent</span></div>
+          <div className="node"><b>nginx</b><span>cache · stream · sse</span></div>
           <div className="node"><b>Waku</b><span>ssg · ssr · routing</span></div>
           <div className="node"><b>Server Components</b><span>run on server</span></div>
           <div className="node"><b>Server functions</b><span>data + mutations</span></div>
@@ -54,14 +55,22 @@ export default async function HomePage() {
           <b>Pure CSS</b>
           <p>One semantic stylesheet. No Tailwind, no CSS-in-JS, no utility soup.</p>
         </li>
+        <li>
+          <b>WebMCP</b>
+          <p>The page offers its own actions to your visitor&apos;s agent as tools. Same functions the buttons call.</p>
+        </li>
+        <li>
+          <b>nginx</b>
+          <p>The network is part of the stack: hashed assets cached for a year, HTML streamed as it renders, SSE left unbuffered.</p>
+        </li>
       </ul>
 
       <h2>See it run</h2>
       <div className="routes">
         <Link to="/feed" className="route-card" data-runtime="server">
           <span className="path">/feed</span>
-          <span className="desc">Typed server data, fetched directly in a server component.</span>
-          <span className="runtime">SSR · 0 islands</span>
+          <span className="desc">Typed server data, fetched directly in a server component. A slow part streams in behind Suspense.</span>
+          <span className="runtime">SSR · streamed · 0 islands</span>
         </Link>
         <Link to="/guestbook" className="route-card" data-runtime="client">
           <span className="path">/guestbook</span>
@@ -72,6 +81,11 @@ export default async function HomePage() {
           <span className="path">/search</span>
           <span className="desc">A client island fetching typed data via a server function — no tRPC, no TanStack.</span>
           <span className="runtime">client fetch</span>
+        </Link>
+        <Link to="/layers" className="route-card" data-runtime="client">
+          <span className="path">/layers</span>
+          <span className="desc">Tools for your visitor&apos;s agent, and the nginx settings that make every byte land fast.</span>
+          <span className="runtime">SSG · 1 island · SSE</span>
         </Link>
         <Link to="/dashboard" className="route-card" data-runtime="frontier">
           <span className="path">/dashboard</span>

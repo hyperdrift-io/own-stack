@@ -15,12 +15,21 @@ Changes here change the pattern other apps copy. Keep every claim in `README.md`
 | Route | Demonstrates |
 |-------|--------------|
 | `/` | Static (SSG) page with one client island |
-| `/feed` | Dynamic (SSR) page awaiting a typed server function — no API route |
-| `/guestbook` | Typed server action (mutation) |
-| `/search` | Client island calling a server function directly |
+| `/feed` | Dynamic (SSR) page awaiting a typed server function — no API route. `<FeedArchive>` is slow on purpose behind `<Suspense>`, so streaming is visible |
+| `/guestbook` | Typed server action (mutation); the form is the declarative WebMCP tool `sign_guestbook` |
+| `/search` | Client island calling a server function directly; `agent-tools.tsx` registers the imperative WebMCP tool `search_feed` on the same function |
+| `/layers` | Explains the agent-ready and network layers; `live-wire.tsx` listens to the SSE endpoint |
+| `/api/events` | SSE handler at `src/pages/_api/api/events.ts`: `hello` on connect, `signed` per guestbook entry, `: beat` every 25s, torn down on abort. Listed in `sse_paths` in `infra/group_vars/apps.yml` |
 | `/dashboard` | The honest frontier: where owned passkeys (`@yannvr/auth`) go. The page copy still names Better Auth and `createApi` — both superseded (2026-09-17): Waku serves handlers from `src/pages/_api/**` (folder `_api`, not `api`) and auth is owned, not vendored. Open task: port `@yannvr/auth` to `Request`/`Response`, wire it here, rewrite the copy (`patterns` skill, Pattern 1) |
 
-The UI colour-codes execution boundaries: cyan runs on the server, amber marks a `'use client'` island.
+The UI colour-codes execution boundaries: cyan runs on the server, amber marks a `'use client'` island. New surfaces carry that in `data-runtime="server|client"` and style from the attribute; the older pages still use a few classes (`.island`, `.stamp`, `.log`) — migrate the whole stylesheet in one pass, not piecemeal.
+
+## Rules this reference sets
+
+- **Every `'use server'` function guards first.** `searchFeed` and `signGuestbook` narrow and cap their input with `str(v, max)` from `src/lib/guard.ts` before anything reads it. A new server function does the same; no validation library.
+- **A WebMCP tool calls the function the button calls.** Declarative attributes are typed in `src/global.d.ts` (a module, which is why `*.css` lives in `src/css.d.ts`); the imperative API is typed in `types/webmcp.d.ts`. No runtime package.
+- **SSE for push, `<Suspense>` for slow.** A new SSE path goes into `sse_paths` and needs `make nginx app=own-stack`.
+- QA for these layers: `curl -N` on `/feed` and `/api/events`, and `await document.modelContext.getTools()` in Chrome 149+ with `chrome://flags/#enable-webmcp-testing` (headless: `--enable-features=WebMCPTesting`).
 
 ## Commands
 
@@ -37,7 +46,7 @@ A pnpm or Yarn lockfile must never reappear here: every app scaffolded from this
 
 ## Gaps against the standard (2026-09-17)
 
-The reference must show every layer it preaches. Missing today: WebMCP tools (`toolname` on the guestbook form, a `search_feed` tool calling `searchFeed` — `patterns`, Pattern 5), an input guard on `searchFeed` (Pattern 6), an SSE example, and auth. `src/lib/data.ts` also lists a Better Auth feed item. Close these before another app copies the template.
+The reference must show every layer it preaches. WebMCP, input guards, Suspense streaming and SSE are in. Still missing: auth (see `/dashboard` above), and the Better Auth mentions left in `src/lib/data.ts`, `src/pages/index.tsx` and `src/components/footer.tsx`. Close these, then delete this section.
 
 ## Version pin
 
