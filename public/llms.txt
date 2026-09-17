@@ -1,0 +1,13 @@
+# own-stack
+
+> A server-rendered React stack you own, with no Next.js: Waku as a thin React Server Components shell, nginx as the network layer, typed server functions, SSE, owned passkeys, WebMCP tools and pure semantic CSS. Nine production dependencies. This site is the running reference; every page demonstrates one layer.
+
+## Pages
+
+- [Home](https://own-stack.hyperdrift.io/): the stack at a glance, on a static page with one client island
+- [The outer layers](https://own-stack.hyperdrift.io/layers): WebMCP above the page, nginx below it, and a live SSE wire
+- [Feed](https://own-stack.hyperdrift.io/feed): a server component awaiting a typed server function, with a slow section streaming in behind Suspense
+- [Guestbook](https://own-stack.hyperdrift.io/guestbook): a typed server action; the form doubles as the `sign_guestbook` WebMCP tool
+- [Typed search](https://own-stack.hyperdrift.io/search): a client island calling a server function by plain import; also the `search_feed` WebMCP tool
+- [Dashboard](https://own-stack.hyperdrift.io/dashboard): passkey sign-in with the session read on the server
+- [Source and README](https://github.com/hyperdrift-io/own-stack): what each dependency is for, how auth works, and how to run it
