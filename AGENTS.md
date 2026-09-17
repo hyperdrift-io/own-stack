@@ -22,6 +22,7 @@ Changes here change the pattern other apps copy. Keep every claim in `README.md`
 | `/api/events` | SSE handler at `src/pages/_api/api/events.ts`: `hello` on connect, `signed` per guestbook entry, `: beat` every 25s, torn down on abort. Listed in `sse_paths` in `infra/group_vars/apps.yml` |
 | `/dashboard` | Passkey sign-in. Dynamic: `getSession()` reads the cookie on the server before render; `passkey-sign-in.tsx` is the only island; `sign-out.tsx` calls the `signOut` server function |
 | `/account` | Protected page: `requireSession()` redirects to `/dashboard` before anything streams. Shows what the store holds for the visitor |
+| `/health` | Liveness probe at `src/pages/_api/health.ts`; `make check-launch-readiness` requires it |
 | `/api/auth/*` | `@yannvr/auth`'s `handleAuth` at `src/pages/_api/api/auth/[...route].ts`: `passkey/register`, `passkey/verify-registration`, `passkey/authenticate`, `passkey/verify-authentication`, `sign-out` (all POST) |
 
 The UI colour-codes execution boundaries: cyan runs on the server, amber marks a `'use client'` island. New surfaces carry that in `data-runtime="server|client"` and style from the attribute; the older pages still use a few classes (`.island`, `.stamp`, `.log`) — migrate the whole stylesheet in one pass, not piecemeal.

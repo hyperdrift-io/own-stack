@@ -18,7 +18,7 @@ This is a minimal, runnable reference: every claim below is something this repo 
 | Styling | **Pure semantic CSS** | One stylesheet, style the primitives. No Tailwind, no CSS-in-JS. |
 | Auth | **Owned passkeys** — [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) | WebAuthn + an HttpOnly session cookie, in a package we own. No password table, no auth vendor. See *Auth: passkeys we own* below. |
 
-**Whole stack: 9 production dependencies.** Five render the pages (Waku, Hono, React ×3). Four run passkeys (our package, SimpleWebAuthn's browser and server halves, `jsonwebtoken`). The database for the demo is the SQLite inside Node. The complete app is ~1,400 lines of TypeScript across 38 files, plus one stylesheet.
+**Whole stack: 9 production dependencies.** Five render the pages (Waku, Hono, React ×3). Four run passkeys (our package, SimpleWebAuthn's browser and server halves, `jsonwebtoken`). The database for the demo is the SQLite inside Node. The complete app is ~1,400 lines of TypeScript across 39 files, plus one stylesheet.
 
 ## What it demonstrates
 
