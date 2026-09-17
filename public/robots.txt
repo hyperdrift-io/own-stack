@@ -1,2 +1,5 @@
 User-agent: *
+Allow: /
 Disallow: /RSC/
+
+Sitemap: https://own-stack.hyperdrift.io/sitemap.xml
