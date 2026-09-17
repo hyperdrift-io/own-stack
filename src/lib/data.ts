@@ -36,3 +36,16 @@ export function filterFeed(items: FeedItem[], query: string): FeedItem[] {
       item.title.toLowerCase().includes(q) || item.source.toLowerCase().includes(q),
   );
 }
+
+const ARCHIVE: FeedItem[] = [
+  { id: 101, title: 'HTTP/1.1 ships chunked transfer encoding', source: 'ietf.org', at: '1997-01-01' },
+  { id: 102, title: 'Server-Sent Events land in the HTML spec', source: 'whatwg.org', at: '2009-04-23' },
+  { id: 103, title: 'React 18 streams HTML through Suspense', source: 'react.dev', at: '2022-03-29' },
+];
+
+// Slow on purpose: two seconds of pretend upstream, so /feed can show what a
+// <Suspense> boundary does with a server component that takes its time.
+export async function getArchive(): Promise<FeedItem[]> {
+  await new Promise((done) => setTimeout(done, 2000));
+  return ARCHIVE;
+}
