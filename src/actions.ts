@@ -1,7 +1,10 @@
 'use server';
 
+import { auth } from './lib/auth';
 import { str } from './lib/guard';
 import { addEntry } from './lib/guestbook';
+import { getSession, requestHeaders } from './lib/session';
+import { queueCookie } from './middleware/response-cookies';
 
 // A server action. The client calls it like a local async function; React ships
 // the call across the wire. Types are enforced on both ends from this one
@@ -17,4 +20,13 @@ export async function signGuestbook(formData: FormData): Promise<void> {
   if (name && message) {
     await addEntry(name, message);
   }
+}
+
+// Sign-out as a server function. Its guard is the session: with nobody signed
+// in there is nothing to do, whoever is asking. A server function returns data,
+// not a Response, so the cookie that clears the session is queued for the way
+// out (src/middleware/response-cookies.ts).
+export async function signOut(): Promise<void> {
+  if (!getSession()) return;
+  queueCookie(await auth.signOut(requestHeaders()));
 }

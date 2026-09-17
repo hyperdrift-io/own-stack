@@ -11,7 +11,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.3",
+    "@yannvr/auth": "file:vendor/yannvr-auth-2.0.0.tgz",
     "hono": "^4.12.14",
+    "jsonwebtoken": "^9.0.3",
     "react": "~19.2.6",
     "react-dom": "~19.2.6",
     "react-server-dom-webpack": "~19.2.6",
@@ -19,6 +23,7 @@
   },
   "devDependencies": {
     "@rolldown/plugin-babel": "^0.2.3",
+    "@types/node": "^22.20.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

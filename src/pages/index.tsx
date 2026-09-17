@@ -18,9 +18,9 @@ export default async function HomePage() {
       </p>
 
       <div className="figures">
-        <div className="figure"><b>5</b><span>production deps</span></div>
-        <div className="figure"><b>~800</b><span>lines of code</span></div>
-        <div className="figure"><b>0</b><span>API routes · tRPC · codegen</span></div>
+        <div className="figure"><b>9</b><span>production deps · 4 are passkeys</span></div>
+        <div className="figure"><b>~1,400</b><span>lines of code</span></div>
+        <div className="figure"><b>0</b><span>data API routes · tRPC · codegen</span></div>
         <div className="figure"><b>1</b><span>framework, and it gets out of the way</span></div>
       </div>
 
@@ -48,8 +48,8 @@ export default async function HomePage() {
           <p>Typed data fetching and mutations across the wire. The import is the contract — no tRPC.</p>
         </li>
         <li>
-          <b>Better Auth</b>
-          <p>Framework-agnostic auth that lives inside your app, not behind a vendor.</p>
+          <b>Owned passkeys</b>
+          <p>Sign-in with no password table to leak. One package of ours, mounted in two lines.</p>
         </li>
         <li>
           <b>Pure CSS</b>
@@ -87,10 +87,10 @@ export default async function HomePage() {
           <span className="desc">Tools for your visitor&apos;s agent, and the nginx settings that make every byte land fast.</span>
           <span className="runtime">SSG · 1 island · SSE</span>
         </Link>
-        <Link to="/dashboard" className="route-card" data-runtime="frontier">
+        <Link to="/dashboard" className="route-card" data-runtime="client">
           <span className="path">/dashboard</span>
-          <span className="desc">Where Better Auth wants to live — the honest frontier.</span>
-          <span className="runtime">frontier</span>
+          <span className="desc">Sign in with a passkey. The session is read on the server before the page renders.</span>
+          <span className="runtime">SSR · session · 1 island</span>
         </Link>
       </div>
 

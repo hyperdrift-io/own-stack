@@ -16,9 +16,9 @@ This is a minimal, runnable reference: every claim below is something this repo 
 | Push | **SSE + `<Suspense>`** | Slow data streams inside the same HTML response. Live data is Server-Sent Events from a raw handler under `src/pages/_api/`, with a heartbeat every 25s and cleanup on abort. No WebSocket server, no client cache. |
 | Agents | **[WebMCP](https://webmachinelearning.github.io/webmcp/)** | The page offers its own actions to the visitor's agent as tools: three attributes on a form, or one small island calling `document.modelContext.registerTool`. A tool calls the function the button calls. Feature-detected; typed locally in `types/webmcp.d.ts`, no package. |
 | Styling | **Pure semantic CSS** | One stylesheet, style the primitives. No Tailwind, no CSS-in-JS. |
-| Auth | **Owned passkeys** — [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) *(designated layer)* | WebAuthn + an HttpOnly session cookie, in a package we own. See *Honest frontier* below. |
+| Auth | **Owned passkeys** — [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) | WebAuthn + an HttpOnly session cookie, in a package we own. No password table, no auth vendor. See *Auth: passkeys we own* below. |
 
-**Whole stack: 5 production dependencies.** The complete demo app is ~800 lines of TypeScript across 27 files, plus one stylesheet.
+**Whole stack: 9 production dependencies.** Five render the pages (Waku, Hono, React ×3). Four run passkeys (our package, SimpleWebAuthn's browser and server halves, `jsonwebtoken`). The database for the demo is the SQLite inside Node. The complete app is ~1,400 lines of TypeScript across 38 files, plus one stylesheet.
 
 ## What it demonstrates
 
@@ -27,7 +27,8 @@ This is a minimal, runnable reference: every claim below is something this repo 
 - `/guestbook` — a **typed server action** (mutation). The function signature is the contract; no API route. The form is also the `sign_guestbook` WebMCP tool, declared with `toolname`, `tooldescription` and `toolparamdescription` — the agent fills it in, the visitor still presses Sign.
 - `/search` — a **client island** that fetches typed data by calling a server function directly. The job people give TanStack Query / SWR — done with a plain import: types flow across the wire, and the server stays the single source of truth. One more island (`src/components/agent-tools.tsx`) registers `search_feed` for the visitor's agent; its `execute` calls the same `searchFeed`.
 - `/layers` — the **outer layers** explained: WebMCP above the page, nginx below it, and a live island listening to `/api/events` (SSE). Sign the guestbook in another tab and the note lands there without a reload.
-- `/dashboard` — the **honest frontier**: where owned passkey auth goes, and why it isn't wired yet.
+- `/dashboard` — **passkey sign-in**. The session is read on the server before the page renders; the island only runs the ceremony.
+- `/account` — a **protected page**: `requireSession()` redirects before anything streams. It lists everything the server holds about you, which is a public key.
 
 The UI is colour-coded by execution boundary: **cyan** runs on the server, **amber** marks a `'use client'` island — the only JavaScript that ships. Pure semantic CSS, no Tailwind.
 
@@ -62,9 +63,31 @@ Because the stack is server-rendered and light, the experience is hard to tell
 from native. Verified installable (service worker active, manifest valid, zero
 Chrome installability errors). No Workbox, no PWA plugin.
 
-## Honest frontier: auth
+## Auth: passkeys we own
 
-Auth is the one layer this demo has not wired, and we would rather say so than fake a protected page. Two corrections to what we first wrote. The mount was never the blocker: Waku's file router serves raw `Request → Response` handlers from `src/pages/_api/**` (the folder is `_api`, not `api` — we probed the wrong one), so a `[...route].ts` exporting `GET`/`POST` answers `/api/auth/*`. And the right library is the one we already own: passkeys through [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) (WebAuthn, HttpOnly session cookie), not a vendored auth layer. Its server half still speaks `next/server`; porting that core to plain `Request`/`Response` is the open task, and `/dashboard` stays honest until it lands.
+The first version of this page said auth was the one layer we had not wired. Two things were wrong with our own excuse, and fixing them was the work.
+
+**The mount was never missing.** Waku serves raw `Request → Response` handlers from `src/pages/_api/**`. The folder is `_api`, not `api`; we had probed the wrong one and blamed the framework.
+
+**The library was the one we already had.** [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) is our passkey package: WebAuthn plus an HttpOnly session cookie. Its server half only spoke Next.js, so we ported the core to plain `Request`/`Response` and kept Next.js as a thin adapter. Now it mounts here in two lines:
+
+```ts
+// src/pages/_api/api/auth/[...route].ts
+import { auth } from '../../../../lib/auth';
+export const POST = (request: Request) => auth.handleAuth(request);
+```
+
+What to read, in order:
+
+- `src/lib/auth.ts` — the one place auth is configured. The origin is fixed in config, never read from a request.
+- `src/lib/auth-store.ts` — storage is injected. The demo hands the package a SQLite file through `node:sqlite`, which ships inside Node, so the example adds no dependency. Swap in your own database without touching a caller.
+- `src/lib/session.ts` — `getSession()` verifies the cookie once per request with React's `cache()`; `requireSession()` redirects before anything streams. `/account` uses it.
+- `src/components/passkey-sign-in.tsx` — the island. It runs the ceremony and reloads the route; it never sees the cookie.
+- `src/actions.ts` → `signOut()` — a server function returns data, not a `Response`, so `src/middleware/response-cookies.ts` (20 lines) carries its `Set-Cookie` out.
+
+What this costs, plainly: four production dependencies — our package, the two halves of [SimpleWebAuthn](https://simplewebauthn.dev) (the protocol library; nobody should hand-roll CBOR and attestation parsing), and `jsonwebtoken`. Sessions are stateless JWTs: sign-out clears your cookie and deletes the session row, and a token copied before that stays valid until it expires. An app that needs instant revocation checks the session table on each read; this demo does not.
+
+Try it on the [live demo](https://own-stack.hyperdrift.io/dashboard): no email, no form. The account you create is a throwaway.
 
 ---
 

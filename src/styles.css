@@ -424,8 +424,6 @@ form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin:
   color: var(--server);
 }
 .route-card[data-runtime="client"] .runtime { color: var(--client); }
-.route-card[data-runtime="frontier"] { border-left-color: var(--muted); border-left-style: dashed; }
-.route-card[data-runtime="frontier"] .runtime { color: var(--muted); }
 
 /* ----------------------------------------------------- panels & islands */
 
@@ -468,8 +466,12 @@ aside[data-runtime='client']::before {
   border: 1px solid var(--client-dim);
   border-radius: 999px;
 }
-.island button { background: var(--client); }
-.island button:hover { box-shadow: 0 0 0 1px var(--client), 0 6px 22px -10px var(--client-glow); }
+.island button,
+[data-runtime='client'] button { background: var(--client); }
+.island button:hover,
+[data-runtime='client'] button:hover { box-shadow: 0 0 0 1px var(--client), 0 6px 22px -10px var(--client-glow); }
+button:disabled { opacity: 0.55; cursor: progress; }
+aside[data-runtime='client'] [role='status'] { color: var(--client); font-family: var(--mono); font-size: 0.82rem; }
 .island p:first-of-type { margin-top: 0; }
 aside[data-runtime='client'] > :last-child { margin-bottom: 0; }
 .island .count {
@@ -532,18 +534,6 @@ aside[data-runtime='client'] > :last-child { margin-bottom: 0; }
 }
 .note.client::before { content: "//"; color: var(--client); }
 .note.client code { color: var(--client); background: var(--client-dim); }
-
-/* honest frontier (dashboard) */
-.frontier {
-  border: 1px dashed var(--client-dim);
-  border-left: 2px solid var(--client);
-  border-radius: var(--radius);
-  background: var(--client-dim);
-  padding: 1.4rem 1.4rem;
-  margin: 1.6rem 0;
-}
-.frontier h3 { color: var(--client); }
-.frontier code { color: var(--client); background: rgba(255, 180, 84, 0.16); }
 
 .back {
   display: inline-block;
