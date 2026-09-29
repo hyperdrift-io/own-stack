@@ -16,9 +16,9 @@ This is a minimal, runnable reference: every claim below is something this repo 
 | Push | **SSE + `<Suspense>`** | Slow data streams inside the same HTML response. Live data is Server-Sent Events from a raw handler under `src/pages/_api/`, with a heartbeat every 25s and cleanup on abort. No WebSocket server, no client cache. |
 | Agents | **[WebMCP](https://webmachinelearning.github.io/webmcp/)** | The page offers its own actions to the visitor's agent as tools: three attributes on a form, or one small island calling `document.modelContext.registerTool`. A tool calls the function the button calls. Feature-detected; typed locally in `types/webmcp.d.ts`, no package. |
 | Styling | **Pure semantic CSS** | One stylesheet, style the primitives. No Tailwind, no CSS-in-JS. |
-| Auth | **Owned passkeys** — [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) | WebAuthn + an HttpOnly session cookie, in a package we own. No password table, no auth vendor. See *Auth: passkeys we own* below. |
+| Auth | **Owned passkeys**, on the platform | WebAuthn checked with WebCrypto, plus an HttpOnly session cookie. No auth library, no password table, no auth vendor. See *Auth: passkeys we own* below. |
 
-**Whole stack: 9 production dependencies.** Five render the pages (Waku, Hono, React ×3). Four run passkeys (our package, SimpleWebAuthn's browser and server halves, `jsonwebtoken`). The database for the demo is the SQLite inside Node. The complete app is ~1,400 lines of TypeScript across 39 files, plus one stylesheet.
+**Whole stack: 5 production dependencies.** All five render the pages (Waku, Hono, React ×3). Passkeys run on what the browser and Node already ship. The database for the demo is the SQLite inside Node. The complete app is ~1,850 lines of TypeScript across 42 files, plus one stylesheet and one test file.
 
 ## What it demonstrates
 
@@ -69,7 +69,7 @@ The first version of this page said auth was the one layer we had not wired. Two
 
 **The mount was never missing.** Waku serves raw `Request → Response` handlers from `src/pages/_api/**`. The folder is `_api`, not `api`; we had probed the wrong one and blamed the framework.
 
-**The library was the one we already had.** [`@yannvr/auth`](https://hyperdrift.io/blog/passkeys-are-the-new-norm) is our passkey package: WebAuthn plus an HttpOnly session cookie. Its server half only spoke Next.js, so we ported the core to plain `Request`/`Response` and kept Next.js as a thin adapter. Now it mounts here in two lines:
+**The library was never needed.** We first ran passkeys through a package of ours that wrapped three libraries. The platform has since caught up. The browser turns the server's JSON into a passkey request and its answer back into JSON (`PublicKeyCredential.parseCreationOptionsFromJSON`, `credential.toJSON()`), and it hands over the public key in a form WebCrypto imports directly. So the server decodes no CBOR and needs no protocol library. It mounts in two lines:
 
 ```ts
 // src/pages/_api/api/auth/[...route].ts
@@ -79,13 +79,16 @@ export const POST = (request: Request) => auth.handleAuth(request);
 
 What to read, in order:
 
-- `src/lib/auth.ts` — the one place auth is configured. The origin is fixed in config, never read from a request.
-- `src/lib/auth-store.ts` — storage is injected. The demo hands the package a SQLite file through `node:sqlite`, which ships inside Node, so the example adds no dependency. Swap in your own database without touching a caller.
-- `src/lib/session.ts` — `getSession()` verifies the cookie once per request with React's `cache()`; `requireSession()` redirects before anything streams. `/account` uses it.
-- `src/components/passkey-sign-in.tsx` — the island. It runs the ceremony and reloads the route; it never sees the cookie.
+- `src/lib/passkeys.ts` — the checks, in one file: the answer was made for this challenge, on this origin, for this site, by a person who was present and verified, and the signature matches the stored key. ES256, Ed25519 and RS256.
+- `src/lib/passkeys.test.ts` — a software authenticator signs real answers, then every check is broken one at a time. `npm test`.
+- `src/lib/auth.ts` — the handler and the one place auth is configured. The origin is fixed in config, never read from a request.
+- `src/lib/auth-store.ts` — four tables over `node:sqlite`, which ships inside Node. Swap in your own database without touching a caller.
+- `src/lib/session.ts` — `getSession()` reads the session once per request with React's `cache()`; `requireSession()` redirects before anything streams. `/account` uses it.
+- `src/lib/passkey-client.ts` and `src/components/passkey-sign-in.tsx` — the browser's half and the island. The island never sees the cookie.
 - `src/actions.ts` → `signOut()` — a server function returns data, not a `Response`, so `src/middleware/response-cookies.ts` (20 lines) carries its `Set-Cookie` out.
+- `scripts/passkey-e2e.mjs` — the whole ceremony in a real Chrome with its virtual authenticator.
 
-What this costs, plainly: four production dependencies — our package, the two halves of [SimpleWebAuthn](https://simplewebauthn.dev) (the protocol library; nobody should hand-roll CBOR and attestation parsing), and `jsonwebtoken`. Sessions are stateless JWTs: sign-out clears your cookie and deletes the session row, and a token copied before that stays valid until it expires. An app that needs instant revocation checks the session table on each read; this demo does not.
+What this costs, plainly: about 640 lines of auth code that are ours to keep right, where a library used to carry that weight. The tests are the counterweight. Registration asks for no attestation, so the server never learns the make of your device. The session cookie holds a random token and the database holds only its hash: sign-out ends the session at once, and a leaked database signs nobody in. It needs a browser from 2025 or later; an older one sees the buttons disabled.
 
 Try it on the [live demo](https://own-stack.hyperdrift.io/dashboard): no email, no form. The account you create is a throwaway.
 

@@ -1,127 +1,133 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { AuthPrismaClient, AuthUser, PasskeyRecord, SessionRecord } from '@yannvr/auth/server';
+import type { Registration, StoredKey } from './passkeys';
 
-// @yannvr/auth never picks your database: it asks for an object shaped like the
-// handful of Prisma calls it makes. This is that object over `node:sqlite`, the
-// SQLite that ships inside Node — so the example adds no dependency. Swap it
-// for your real client (Prisma, Drizzle, Postgres) without touching a caller.
-
-type Row = Record<string, unknown>;
+// Everything auth keeps, in the SQLite that ships inside Node. Four tables and
+// no secret worth stealing: public keys, the hash of each session token, and
+// challenges that live for five minutes. Swap this file for your own database
+// without touching a caller.
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS user (
-    id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT,
-    created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+    id TEXT PRIMARY KEY, created_at TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS passkey (
-    id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES user(id),
-    credential_id TEXT NOT NULL UNIQUE, public_key BLOB NOT NULL, counter INTEGER NOT NULL,
-    device_type TEXT NOT NULL, backed_up INTEGER NOT NULL, transports TEXT NOT NULL,
+    credential_id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES user(id),
+    public_key BLOB NOT NULL, alg INTEGER NOT NULL, counter INTEGER NOT NULL,
+    synced INTEGER NOT NULL, transports TEXT NOT NULL,
     created_at TEXT NOT NULL, last_used TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS session (
-    id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES user(id),
-    token TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL
+    token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES user(id),
+    expires_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS challenge (
+    id TEXT PRIMARY KEY, value TEXT NOT NULL, user_id TEXT, expires_at TEXT NOT NULL
   );
 `;
 
-const toUser = (r: Row): AuthUser => ({
-  id: r.id as string,
-  email: r.email as string,
-  name: r.name as string | null,
-  createdAt: new Date(r.created_at as string),
-  updatedAt: new Date(r.updated_at as string),
-});
+const CHALLENGE_SECONDS = 5 * 60;
 
-const toPasskey = (r: Row): PasskeyRecord => ({
-  id: r.id as string,
-  userId: r.user_id as string,
-  credentialId: r.credential_id as string,
-  publicKey: r.public_key as Uint8Array,
-  counter: Number(r.counter),
-  deviceType: r.device_type as string,
-  backedUp: r.backed_up === 1,
-  transports: JSON.parse(r.transports as string) as string[],
-  createdAt: new Date(r.created_at as string),
-  lastUsed: new Date(r.last_used as string),
-});
+type Row = Record<string, unknown>;
 
-const toSession = (r: Row): SessionRecord => ({
-  id: r.id as string,
-  userId: r.user_id as string,
-  token: r.token as string,
-  expiresAt: new Date(r.expires_at as string),
-  createdAt: new Date(r.created_at as string),
-});
+export type Challenge = { value: string; userId: string | null };
+export type Passkey = StoredKey & { credentialId: string; userId: string; synced: boolean; createdAt: string; lastUsed: string };
 
-export function createSqliteAuthStore(path: string): AuthPrismaClient {
+export type AuthStore = ReturnType<typeof createAuthStore>;
+
+const token = () => randomBytes(32).toString('base64url');
+const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+const later = (seconds: number) => new Date(Date.now() + seconds * 1000).toISOString();
+
+export function createAuthStore(path: string) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec(SCHEMA);
 
-  const one = (sql: string, ...params: (string | number | Uint8Array)[]) =>
-    db.prepare(sql).get(...params) as Row | undefined;
-  const passkeysOf = (userId: string) =>
-    (db.prepare('SELECT * FROM passkey WHERE user_id = ? ORDER BY created_at').all(userId) as Row[]).map(toPasskey);
   const now = () => new Date().toISOString();
+  const one = (sql: string, ...params: (string | number)[]) => db.prepare(sql).get(...params) as Row | undefined;
+
+  const toPasskey = (r: Row): Passkey => ({
+    credentialId: r.credential_id as string,
+    userId: r.user_id as string,
+    publicKey: new Uint8Array(r.public_key as Uint8Array),
+    alg: Number(r.alg),
+    counter: Number(r.counter),
+    synced: r.synced === 1,
+    createdAt: r.created_at as string,
+    lastUsed: r.last_used as string,
+  });
 
   return {
-    user: {
-      async findUnique({ where, include }) {
-        const row = where.id ? one('SELECT * FROM user WHERE id = ?', where.id) : one('SELECT * FROM user WHERE email = ?', where.email ?? '');
-        if (!row) return null;
-        return include?.passkeys ? { ...toUser(row), passkeys: passkeysOf(row.id as string) } : toUser(row);
-      },
-      async create({ data }) {
-        const id = crypto.randomUUID();
-        db.prepare('INSERT INTO user VALUES (?, ?, ?, ?, ?)').run(id, data.email, data.name ?? null, now(), now());
-        return { ...toUser(one('SELECT * FROM user WHERE id = ?', id)!), passkeys: [] };
-      },
+    /** Remembers a challenge and returns the id the browser carries back in a cookie. */
+    openChallenge(value: string, userId: string | null): { id: string; maxAge: number } {
+      db.prepare('DELETE FROM challenge WHERE expires_at < ?').run(now());
+      const id = token();
+      db.prepare('INSERT INTO challenge VALUES (?, ?, ?, ?)').run(id, value, userId, later(CHALLENGE_SECONDS));
+      return { id, maxAge: CHALLENGE_SECONDS };
     },
-    passkey: {
-      async create({ data }) {
-        const id = crypto.randomUUID();
-        try {
-          db.prepare('INSERT INTO passkey VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
-            id, data.userId as string, data.credentialId as string, data.publicKey as Uint8Array,
-            Number(data.counter), data.deviceType as string, data.backedUp ? 1 : 0,
-            JSON.stringify(data.transports ?? []), now(), now(),
-          );
-        } catch (err) {
-          // The package recognises a duplicate credential by Prisma's code for it.
-          if (err instanceof Error && /UNIQUE constraint/.test(err.message)) throw Object.assign(err, { code: 'P2002' });
-          throw err;
-        }
-        return toPasskey(one('SELECT * FROM passkey WHERE id = ?', id)!);
-      },
-      async update({ where, data }) {
-        db.prepare('UPDATE passkey SET counter = ?, last_used = ? WHERE id = ?').run(Number(data.counter), now(), where.id);
-        return toPasskey(one('SELECT * FROM passkey WHERE id = ?', where.id)!);
-      },
-      // Lets a returning visitor sign in with no email: the browser offers the passkey, we look it up.
-      async findFirst({ where }) {
-        const row = one('SELECT * FROM passkey WHERE credential_id = ?', where.credentialId);
-        return row ? toPasskey(row) : null;
-      },
+
+    /** A challenge answers once. Reading it removes it, whatever the answer turns out to be. */
+    takeChallenge(id: string | undefined): Challenge | null {
+      if (!id) return null;
+      const row = one('SELECT * FROM challenge WHERE id = ? AND expires_at >= ?', id, now());
+      db.prepare('DELETE FROM challenge WHERE id = ?').run(id);
+      return row ? { value: row.value as string, userId: (row.user_id as string | null) ?? null } : null;
     },
-    session: {
-      async create({ data }) {
-        const id = crypto.randomUUID();
-        db.prepare('INSERT INTO session VALUES (?, ?, ?, ?, ?)').run(id, data.userId, data.token, data.expiresAt.toISOString(), now());
-        return toSession(one('SELECT * FROM session WHERE id = ?', id)!);
-      },
-      async delete({ where }) {
-        const row = one('SELECT * FROM session WHERE token = ?', where.token);
-        if (!row) throw new Error('Session not found');
-        db.prepare('DELETE FROM session WHERE token = ?').run(where.token);
-        return toSession(row);
-      },
-      async findUnique({ where }) {
-        const row = one('SELECT * FROM session WHERE token = ?', where.token);
-        return row ? toSession(row) : null;
-      },
+
+    /** Stores a new visitor and their first key together, or neither. */
+    register(userId: string, key: Registration): boolean {
+      db.exec('BEGIN');
+      try {
+        db.prepare('INSERT INTO user VALUES (?, ?)').run(userId, now());
+        db.prepare('INSERT INTO passkey VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+          key.credentialId, userId, key.publicKey, key.alg, key.counter,
+          key.synced ? 1 : 0, JSON.stringify(key.transports), now(), now(),
+        );
+        db.exec('COMMIT');
+        return true;
+      } catch (error) {
+        db.exec('ROLLBACK');
+        if (error instanceof Error && /UNIQUE constraint/.test(error.message)) return false;
+        throw error;
+      }
+    },
+
+    passkey(credentialId: string): Passkey | null {
+      const row = one('SELECT * FROM passkey WHERE credential_id = ?', credentialId);
+      return row ? toPasskey(row) : null;
+    },
+
+    passkeysOf(userId: string): Passkey[] {
+      return (db.prepare('SELECT * FROM passkey WHERE user_id = ? ORDER BY created_at').all(userId) as Row[]).map(toPasskey);
+    },
+
+    used(credentialId: string, counter: number, synced: boolean): void {
+      db.prepare('UPDATE passkey SET counter = ?, synced = ?, last_used = ? WHERE credential_id = ?')
+        .run(counter, synced ? 1 : 0, now(), credentialId);
+    },
+
+    memberSince(userId: string): string | null {
+      return (one('SELECT created_at FROM user WHERE id = ?', userId)?.created_at as string | undefined) ?? null;
+    },
+
+    /** Opens a session and returns the token for the cookie. Only its hash is kept. */
+    openSession(userId: string, seconds: number): string {
+      const value = token();
+      db.prepare('INSERT INTO session VALUES (?, ?, ?)').run(hash(value), userId, later(seconds));
+      return value;
+    },
+
+    session(value: string | undefined): { userId: string } | null {
+      if (!value) return null;
+      const row = one('SELECT user_id FROM session WHERE token_hash = ? AND expires_at >= ?', hash(value), now());
+      return row ? { userId: row.user_id as string } : null;
+    },
+
+    closeSession(value: string | undefined): void {
+      if (value) db.prepare('DELETE FROM session WHERE token_hash = ?').run(hash(value));
     },
   };
 }

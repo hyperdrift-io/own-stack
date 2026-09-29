@@ -6,9 +6,9 @@
 
 ## Role
 
-own-stack is the reference implementation of the HD UI Stack Standard (root `AGENTS.md` → UI Stack Standard): Waku as a thin React Server Components shell, guarded typed server functions, pure semantic CSS, owned passkeys (`@yannvr/auth`) as the designated auth layer, and WebMCP tools by default. Live demo: https://own-stack.hyperdrift.io (port 3010). The `own-your-stack-*` articles in `apps/hyper-drift/content/blog/` explain it.
+own-stack is the reference implementation of the HD UI Stack Standard (root `AGENTS.md` → UI Stack Standard): Waku as a thin React Server Components shell, guarded typed server functions, pure semantic CSS, owned passkeys on the platform's own primitives (WebCrypto, no auth library), and WebMCP tools by default. Live demo: https://own-stack.hyperdrift.io (port 3010). The `own-your-stack-*` articles in `apps/hyper-drift/content/blog/` explain it.
 
-Changes here change the pattern other apps copy. Keep every claim in `README.md` true of the code, and keep the stack small — the README counts nine production dependencies (five render, four run passkeys) and says what each is for, so add none without explicit approval.
+Changes here change the pattern other apps copy. Keep every claim in `README.md` true of the code, and keep the stack small — the README counts five production dependencies, all for rendering, and says what each is for, so add none without explicit approval.
 
 ## Routes
 
@@ -23,7 +23,7 @@ Changes here change the pattern other apps copy. Keep every claim in `README.md`
 | `/dashboard` | Passkey sign-in. Dynamic: `getSession()` reads the cookie on the server before render; `passkey-sign-in.tsx` is the only island; `sign-out.tsx` calls the `signOut` server function |
 | `/account` | Protected page: `requireSession()` redirects to `/dashboard` before anything streams. Shows what the store holds for the visitor |
 | `/health` | Liveness probe at `src/pages/_api/health.ts`; `make check-launch-readiness` requires it |
-| `/api/auth/*` | `@yannvr/auth`'s `handleAuth` at `src/pages/_api/api/auth/[...route].ts`: `passkey/register`, `passkey/verify-registration`, `passkey/authenticate`, `passkey/verify-authentication`, `sign-out` (all POST) |
+| `/api/auth/*` | `auth.handleAuth` (`src/lib/auth.ts`) at `src/pages/_api/api/auth/[...route].ts`: `passkey/register`, `passkey/verify-registration`, `passkey/authenticate`, `passkey/verify-authentication`, `sign-out` (all POST) |
 
 The UI colour-codes execution boundaries: cyan runs on the server, amber marks a `'use client'` island. New surfaces carry that in `data-runtime="server|client"` and style from the attribute; the older pages still use a few classes (`.island`, `.stamp`, `.log`) — migrate the whole stylesheet in one pass, not piecemeal.
 
@@ -40,6 +40,7 @@ The UI colour-codes execution boundaries: cyan runs on the server, amber marks a
 npm run dev                    # http://localhost:3000
 npm run build && npm start     # production build, served on PORT/HOST
 npm run type-check             # tsc --noEmit
+npm test                       # passkey checks, node --test
 npm run typegen                # waku router typegen
 ```
 
@@ -49,15 +50,16 @@ A pnpm or Yarn lockfile must never reappear here: every app scaffolded from this
 
 ## Auth
 
-Owned passkeys through `@yannvr/auth` (source: `~/dev/hyperdrift/packages/auth`; walk-through: `patterns` skill, Pattern 1). No vendored or hosted auth, ever.
+Owned passkeys with no auth library. **Status: spike on branch `feat/passkeys-platform` (2026-09-30)**; it becomes the fleet pattern once the founder has run it on real devices.
 
-- `src/lib/auth.ts` configures it once. `ORIGIN` (default `http://localhost:3000`, production default `https://own-stack.hyperdrift.io`) fixes the WebAuthn origin and `rpID`; never derive them from a request. `JWT_SECRET` signs sessions; without it the process makes its own and a restart signs everyone out — fine for this demo, not for an app with users. `AUTH_DB` (default `.data/auth.db`, gitignored) is the SQLite file.
+- `src/lib/passkeys.ts` verifies both ceremonies with WebCrypto. The browser supplies the public key as SPKI through `credential.toJSON()`, so nothing decodes CBOR. Attestation is `none`. User verification is required. Change a check only together with its test in `src/lib/passkeys.test.ts`.
+- `src/lib/auth.ts` holds the handler, `readSession` and `signOut`, and configures them once. `ORIGIN` (default `http://localhost:3000`, production default `https://own-stack.hyperdrift.io`) fixes the WebAuthn origin and `rpID`; never derive them from a request. `AUTH_DB` (default `.data/passkeys.db`, gitignored) is the SQLite file.
 - Dev on another port needs the origin to match: `ORIGIN=http://localhost:3024 npm run dev -- --port 3024`.
-- `src/lib/auth-store.ts` is an example adapter over `node:sqlite` (Node ≥ 22.13, prints an ExperimentalWarning on 22). A real app injects its own database client instead; the package never takes a database dependency.
+- `src/lib/auth-store.ts` is the store over `node:sqlite` (Node ≥ 22.13). Sessions are random tokens; the table keeps their SHA-256. A challenge answers once and lives five minutes.
+- Keys stored by the earlier package were in COSE form and sit in `.data/auth.db`. This code reads SPKI from a new file, so a visitor from before creates a passkey again. An app with real users converts its stored keys before it switches.
 - `src/lib/session.ts` is the only non-page file that imports `waku/*`. Everything else takes a `Headers` object.
 - A server function cannot return a `Response`, so cookies it needs to set go through `queueCookie()` in `src/middleware/response-cookies.ts`.
-- QA: the ceremony needs a browser. Drive Chrome with a CDP virtual authenticator (`WebAuthn.enable` + `WebAuthn.addVirtualAuthenticator`, `ctap2` / `internal` / resident key / user verified) through register, `/account`, sign-out, sign-in with the existing passkey.
-- **Temporary:** `@yannvr/auth` resolves from `vendor/yannvr-auth-2.0.0.tgz` because 2.0.0 is not on npm yet (publishing needs the founder's npm login). Once it is published: `npm install @yannvr/auth@^2.0.0`, delete `vendor/`, delete this bullet. Do not copy the `vendor/` folder into a new app.
+- QA: `npm test` for the checks; `node scripts/passkey-e2e.mjs http://localhost:3024` for the ceremony in a real Chrome with a virtual authenticator (register, `/account`, sign-out, sign-in, a browser with no passkey).
 
 ## Version pin
 

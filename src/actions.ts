@@ -28,5 +28,5 @@ export async function signGuestbook(formData: FormData): Promise<void> {
 // out (src/middleware/response-cookies.ts).
 export async function signOut(): Promise<void> {
   if (!getSession()) return;
-  queueCookie(await auth.signOut(requestHeaders()));
+  queueCookie(auth.signOut(requestHeaders()));
 }

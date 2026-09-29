@@ -12,7 +12,8 @@ export const getSession = cache(() => auth.readSession(requestHeaders()));`;
 
 // Dynamic page. The session is read on the server, from the request's cookie,
 // before anything renders — so there is no signed-out flash and no auth state
-// in the browser. Passkeys come from @yannvr/auth, the package we own.
+// in the browser. Passkeys run on WebCrypto and the browser's own JSON helpers
+// (src/lib/passkeys.ts): no auth library.
 export default async function DashboardPage() {
   const session = getSession();
 
@@ -51,9 +52,9 @@ export default async function DashboardPage() {
         <>
           <h1>Sign in without a password.</h1>
           <p className="lede">
-            Auth is the layer teams hand to a vendor first. Here it is one
-            package we own, mounted in two lines, with no password table to
-            leak.
+            Auth is the layer teams hand to a vendor first. Here it is three
+            files we own and no library, mounted in two lines, with no password
+            table to leak.
           </p>
 
           <PasskeySignIn />
@@ -65,9 +66,10 @@ export default async function DashboardPage() {
         <article data-runtime="server">
           <h3>One handler, two lines</h3>
           <p>
-            <code>@yannvr/auth</code> speaks plain <code>Request → Response</code>,
-            so Waku mounts it like any other file under <code>src/pages/_api/</code>.
-            Storage is injected: this demo hands it a SQLite file through{' '}
+            The handler speaks plain <code>Request → Response</code>, so Waku
+            mounts it like any other file under <code>src/pages/_api/</code>.
+            The browser hands over the public key and WebCrypto checks every
+            signature. Keys and sessions sit in a SQLite file through{' '}
             <code>node:sqlite</code>, which ships inside Node.
           </p>
           <pre><code>{MOUNT_SOURCE}</code></pre>
@@ -84,9 +86,10 @@ export default async function DashboardPage() {
       </section>
 
       <p className="note">
-        this page used to say auth was not wired. we had probed the wrong folder,
-        then ported our own passkey package off Next.js. the account you make
-        here is a throwaway: no email asked, nothing worth stealing
+        this page used to say auth was not wired. then it ran on a passkey
+        package of ours that wrapped three libraries. now the platform does the
+        work. the account you make here is a throwaway: no email asked, nothing
+        worth stealing
       </p>
 
       <Link to="/" className="back">home</Link>
