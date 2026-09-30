@@ -50,7 +50,7 @@ A pnpm or Yarn lockfile must never reappear here: every app scaffolded from this
 
 ## Auth
 
-Owned passkeys with no auth library. **Status: spike on branch `feat/passkeys-platform` (2026-09-30)**; it becomes the fleet pattern once the founder has run it on real devices.
+Owned passkeys with no auth library. The founder validated it on 2026-09-30 and it is the fleet pattern (`patterns` skill, Pattern 1).
 
 - `src/lib/passkeys.ts` verifies both ceremonies with WebCrypto. The browser supplies the public key as SPKI through `credential.toJSON()`, so nothing decodes CBOR. Attestation is `none`. User verification is required. Change a check only together with its test in `src/lib/passkeys.test.ts`.
 - `src/lib/auth.ts` holds the handler, `readSession` and `signOut`, and configures them once. `ORIGIN` (default `http://localhost:3000`, production default `https://own-stack.hyperdrift.io`) fixes the WebAuthn origin and `rpID`; never derive them from a request. `AUTH_DB` (default `.data/passkeys.db`, gitignored) is the SQLite file.
