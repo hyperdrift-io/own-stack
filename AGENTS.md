@@ -1,12 +1,10 @@
 # own-stack
 
-> **Inherits**: [Hyperdrift workspace AGENTS.md](../../../AGENTS.md) (`~/dev/hyperdrift/AGENTS.md`). Read it first; this file adds own-stack-specific context only.
->
-> **Voice Covenant**: every user-facing surface, including demo copy, inherits `meta/PHILOSOPHY.md` #8 "Speak to Enable" — enable, never diminish; strengths first.
+> Inherits `~/dev/hyperdrift/AGENTS.md`.
 
 ## Role
 
-own-stack is the reference implementation of the HD UI Stack Standard (root `AGENTS.md` → UI Stack Standard): Waku as a thin React Server Components shell, guarded typed server functions, pure semantic CSS, owned passkeys on the platform's own primitives (WebCrypto, no auth library), and WebMCP tools by default. Live demo: https://own-stack.hyperdrift.io (port 3010). The `own-your-stack-*` articles in `apps/hyper-drift/content/blog/` explain it.
+own-stack is the reference implementation of the HD UI Stack Standard (`.claude/rules/ui-stack.md`): Waku as a thin React Server Components shell, guarded typed server functions, pure semantic CSS, owned passkeys on the platform's own primitives (WebCrypto, no auth library), and WebMCP tools by default. Live demo: https://own-stack.hyperdrift.io (port 3010). The `own-your-stack-*` articles in `apps/hyper-drift/content/blog/` explain it.
 
 Changes here change the pattern other apps copy. Keep every claim in `README.md` true of the code, and keep the stack small — the README counts five production dependencies, all for rendering, and says what each is for, so add none without explicit approval.
 
@@ -44,9 +42,7 @@ npm test                       # passkey checks, node --test
 npm run typegen                # waku router typegen
 ```
 
-npm is the package manager (root `AGENTS.md` → Package Manager Standard): `package-lock.json` is the lockfile, and `infra/group_vars/apps.yml` deploys this app with `package_manager: "npm"`.
-
-A pnpm or Yarn lockfile must never reappear here: every app scaffolded from this repo inherits its package manager.
+npm only (`package-lock.json`). Apps scaffolded from here inherit it, so no other lockfile.
 
 ## Auth
 
@@ -63,6 +59,6 @@ Owned passkeys with no auth library. The founder validated it on 2026-09-30 and 
 
 ## Version pin
 
-`waku` is pinned exactly to `1.0.0-rc.3` (2026-10-06), with React, react-dom and react-server-dom-webpack on `~19.3.0`, Waku's peer range since rc.1. Bumped from `1.0.0-rc.0` on 2026-10-08 with no code changes here. [React #34760](https://github.com/facebook/react/pull/34760) fixes the stylesheet preload attribute (`as="style"` rather than `as="stylesheet"`); that source does not establish a streamed not-found timeout fix. Since rc.2 the default root renders the `charset` and `viewport` meta tags, so an app with its own `src/pages/_root.tsx` adds both there. rc.3's `defineRouter` redesign touches only the programmatic router, not file routes. This app is the fleet's reference, so bump it here first, then every Waku app (`greenlife`, `stillness`, `together`, `wakejam`, `unanswered`). Keep the pin exact: `npm install` writes a caret, which would let the next rc in unreviewed. Move to `1.0.0` final when it ships. Verdicts: `meta/TOOLING.md`.
+`waku` pinned exactly to `1.0.0-rc.3`, React `~19.3.0`. Bump here first, then greenlife, stillness, together, wakejam and unanswered; keep the pin exact. Verdict: `meta/TOOLING.md`.
 
-Node follows production: `.nvmrc` holds `22`, the major the server installs (`infra/group_vars/all.yml → node_version`), and `devEngines` makes npm refuse Node 26, where every `_api` route answers 500 (Waku rebuilds each API request with `new Request(url, req)`; undici 8 rejects the `duplex` read on `@hono/node-server`'s lightweight request). fnm switches on `cd` in an interactive shell; from an agent or `launch.json`, run `fnm exec -- npm run dev`. Every Waku app carries both files; widen the range when the exit gate in `meta/TOOLING.md` is met.
+`.nvmrc` (22) and `devEngines` match production; reasons in `meta/TOOLING.md` → Node. From an agent, run `fnm exec -- npm run dev`.
